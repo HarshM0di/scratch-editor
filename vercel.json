@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx --yes react-scripts@5.0.1 build",
-  "outputDirectory": "build",
-  "framework": "create-react-app"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
 }
