@@ -23,10 +23,6 @@ export default function App() {
   const active = sprites.find((s) => s.id === activeId) || sprites[0] || null;
   const currentActiveId = active ? active.id : null;
 
-  // ── helpers ────────────────────────────────────────────────────────────────
-
-  
-
   // ── drag & drop ────────────────────────────────────────────────────────────
 
   const handlePaletteDragStart = useCallback((e, def) => {
@@ -82,6 +78,16 @@ export default function App() {
       )
     );
   }, [currentActiveId]);
+
+  // ── sprite dragging in playground ──────────────────────────────────────────
+
+  const handleDragSprite = useCallback((spriteId, newX, newY) => {
+    setSprites((prev) =>
+      prev.map((s) =>
+        s.id === spriteId ? { ...s, x: Math.round(newX), y: Math.round(newY) } : s
+      )
+    );
+  }, []);
 
   // ── hero feature: collision swap ───────────────────────────────────────────
 
@@ -298,6 +304,7 @@ export default function App() {
             sprites={sprites}
             activeId={currentActiveId}
             onSelectSprite={setActiveId}
+            onDragSprite={handleDragSprite}
           />
           <SpritePanel
             sprites={sprites}

@@ -2,7 +2,23 @@ import React from "react";
 import { STAGE_W, STAGE_H, SPRITE_SIZE } from "../data/blocks";
 import SpeechBubble from "./SpeechBubble";
 
-export default function Stage({ sprites, activeId, onSelectSprite }) {
+export default function Stage({ sprites, activeId, onSelectSprite, onDragSprite }) {
+  const handleDrag = (e, spriteId) => {
+    if (e.clientX === 0 && e.clientY === 0) return; // Ignore invalid positions
+    
+    const stageRect = e.currentTarget.parentElement.getBoundingClientRect();
+    const newX = e.clientX - stageRect.left - SPRITE_SIZE / 2;
+    const newY = e.clientY - stageRect.top - SPRITE_SIZE / 2;
+    
+    // Constrain to stage boundaries
+    const boundedX = Math.max(0, Math.min(STAGE_W - SPRITE_SIZE, newX));
+    const boundedY = Math.max(0, Math.min(STAGE_H - SPRITE_SIZE, newY));
+    
+    if (onDragSprite) {
+      onDragSprite(spriteId, boundedX, boundedY);
+    }
+  };
+
   return (
     <div
       style={{
@@ -32,7 +48,12 @@ export default function Stage({ sprites, activeId, onSelectSprite }) {
       {Array.isArray(sprites) && sprites.map((sp) => (
         <div
           key={sp.id}
+          draggable
           onClick={() => onSelectSprite(sp.id)}
+          onDragStart={(e) => {
+            e.dataTransfer.effectAllowed = "move";
+          }}
+          onDrag={(e) => handleDrag(e, sp.id)}
           style={{
             position:   "absolute",
             left:       sp.x,
@@ -43,12 +64,12 @@ export default function Stage({ sprites, activeId, onSelectSprite }) {
             display:    "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor:     "pointer",
+            cursor:     "grab",
             transform:  "rotate(" + sp.dir + "deg)",
             filter:     activeId === sp.id
               ? "drop-shadow(0 0 8px #4C97FF) drop-shadow(0 0 3px #4C97FF)"
               : "none",
-            transition: "left 0.08s, top 0.08s, filter 0.2s",
+            transition: "filter 0.2s",
           }}
         >
           {sp.bubble && (
@@ -57,6 +78,34 @@ export default function Stage({ sprites, activeId, onSelectSprite }) {
           {sp.emoji}
         </div>
       ))}
+
+      {/* Coordinate Display */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 8,
+          left: 8,
+          background: "rgba(0,0,0,0.75)",
+          color: "#fff",
+          padding: "6px 12px",
+          borderRadius: 8,
+          fontSize: 12,
+          fontWeight: 600,
+          fontFamily: "monospace",
+          pointerEvents: "none",
+          zIndex: 100,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        }}
+      >
+        {sprites.find((s) => s.id === activeId) ? (
+          <>
+            X: {Math.round(sprites.find((s) => s.id === activeId).x)} | 
+            Y: {Math.round(sprites.find((s) => s.id === activeId).y)}
+          </>
+        ) : (
+          "No sprite selected"
+        )}
+      </div>
     </div>
   );
 }
