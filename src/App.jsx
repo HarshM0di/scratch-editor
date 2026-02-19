@@ -7,10 +7,20 @@ import { BLOCK_DEFS, CATEGORIES, STAGE_W, STAGE_H, SPRITE_SIZE } from "./data/bl
 import { newId, distance, cloneBlock, makeSprite } from "./utils/animation";
 
 export default function App() {
-  const [sprites, setSprites] = useState(() => [makeSprite(0), makeSprite(1)]);
+  const [sprites, setSprites] = useState(() => {
+    const s1 = makeSprite(0);
+    const s2 = makeSprite(1);
+    // Position sprites facing each other for collision demo
+    s1.x = 50;
+    s1.y = STAGE_H / 2 - SPRITE_SIZE / 2;
+    s2.x = STAGE_W - SPRITE_SIZE - 50;
+    s2.y = STAGE_H / 2 - SPRITE_SIZE / 2;
+    return [s1, s2];
+  });
   const [activeId, setActiveId]   = useState(() => null);
   const [activeCat, setActiveCat] = useState("motion");
   const [playing, setPlaying]     = useState(false);
+  const [collisionHappened, setCollisionHappened] = useState(false);
 
   const spritesRef  = useRef(null);
   const playingRef  = useRef(false);
@@ -102,6 +112,7 @@ export default function App() {
           if (collidedRef.current.has(key)) continue;
           if (distance(next[i], next[j]) < SPRITE_SIZE * 1.4) {
             collidedRef.current.add(key);
+            setCollisionHappened(true); // Visual indicator
             const tmp = next[i].scripts;
             next[i] = { ...next[i], scripts: next[j].scripts.map((b) => ({ ...b, uid: newId() })) };
             next[j] = { ...next[j], scripts: tmp.map((b) => ({ ...b, uid: newId() })) };
@@ -169,6 +180,7 @@ export default function App() {
       playingRef.current = false;
       setPlaying(false);
       collidedRef.current = new Set();
+      setCollisionHappened(false);
       setSprites((prev) => prev.map((s) => ({ ...s, bubble: null })));
       return;
     }
@@ -176,6 +188,7 @@ export default function App() {
     playingRef.current = true;
     setPlaying(true);
     collidedRef.current = new Set();
+    setCollisionHappened(false);
 
     const snap = spritesRef.current;
 
@@ -330,6 +343,11 @@ export default function App() {
         Drag blocks → Drop into script → Press ▶ Play &nbsp;|&nbsp;
         <span style={{ color: "#f59e0b", fontWeight: 700 }}>Hero Feature:</span>
         {" "}sprites swap animations on collision!
+        {collisionHappened && (
+          <span style={{ color: "#22c55e", fontWeight: 700, marginLeft: 8 }}>
+            ✓ COLLISION DETECTED - Scripts Swapped!
+          </span>
+        )}
       </div>
     </div>
   );
